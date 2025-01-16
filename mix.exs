@@ -50,7 +50,7 @@ defmodule Refiner.MixProject do
        github: "tsutsu/ethereum_abi",
        branch: "feature-parse-events-from-abi-specifications",
        override: true},
-      {:ex_secp256k1, "0.7.3", override: true},
+      {:ex_secp256k1, "0.7.4", override: true},
       {:ex_keccak, "~> 0.7.1", override: true},
       {:mnemonic, "~> 0.3"},
       {:ex_rlp, "~> 0.6.0", override: true},
