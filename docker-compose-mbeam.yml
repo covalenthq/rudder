@@ -2,11 +2,11 @@ version: "3"
 # runs the entire refiner pipeline with all supporting services (including refiner) in docker
 # set .env such that all services in docker are talking to each other only
 services:
-  ipfs-pinner:
-    image: "us-docker.pkg.dev/covalent-project/network/ipfs-pinner:stable"
+  ewm-das:
+    image: "us-docker.pkg.dev/covalent-project/network/ewm-das:stable"
     volumes:
       - ~/.ipfs:/root/.ipfs/
-    container_name: ipfs-pinner
+    container_name: ewm-das
     restart: always
     labels:
       "autoheal": "true"
@@ -17,7 +17,7 @@ services:
       - W3_AGENT_KEY=${W3_AGENT_KEY}
       - W3_DELEGATION_FILE=/root/.ipfs/proof.out
     networks:
-      - cqt-net
+      - cxt-net
     ports:
       - "4001:4001"
       - "3001:3001"
@@ -31,7 +31,7 @@ services:
     expose:
       - "3002:3002"
     networks:
-      - cqt-net
+      - cxt-net
     ports:
       - "3002:3002"
 
@@ -39,14 +39,14 @@ services:
     image: "us-docker.pkg.dev/covalent-project/network/refiner:stable"
     container_name: refiner
     links:
-      - "ipfs-pinner:ipfs-pinner"
+      - "ewm-das:ewm-das"
       - "evm-server:evm-server"
     # build:
     #   context: .
     #   dockerfile: Dockerfile
     restart: always
     depends_on:
-      ipfs-pinner:
+      ewm-das:
         condition: service_healthy
       evm-server:
         condition: service_healthy
@@ -54,7 +54,7 @@ services:
       /bin/bash -l -c "
         echo "moonbeam-node:" $NODE_ETHEREUM_MAINNET;
         echo "evm-server:" $EVM_SERVER_URL;
-        echo "ipfs-node:" $IPFS_PINNER_URL;
+        echo "ewm-das:" $IPFS_PINNER_URL;
         cd /mix;
         MIX_ENV=prod mix deps.get;
         MIX_ENV=prod mix release --overwrite;
@@ -65,7 +65,7 @@ services:
       - EVM_SERVER_URL=${EVM_SERVER_URL}
       - IPFS_PINNER_URL=${IPFS_PINNER_URL}
     networks:
-      - cqt-net
+      - cxt-net
     ports:
       - "9568:9568"
 
@@ -79,4 +79,4 @@ services:
       - CURL_TIMEOUT=30
 
 networks:
-  cqt-net:
+  cxt-net:

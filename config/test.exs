@@ -6,5 +6,5 @@ config :refiner,
   brp_proofchain_address: "0x3402ce1e416e082ed3Ba3d9dcba10353F3b64499",
   proofchain_chain_id: 31337,
   proofchain_node: "http://127.0.0.1:8545/",
-  ipfs_pinner_url: "http://127.0.0.1:3001",
+  ipfs_pinner_url: "http://127.0.0.1:5080",
   evm_server_url: "http://127.0.0.1:3002"

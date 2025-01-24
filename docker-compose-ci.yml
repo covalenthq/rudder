@@ -40,11 +40,11 @@ services:
     ports:
       - "8008:8008"
 
-  ipfs-pinner:
-    image: "us-docker.pkg.dev/covalent-project/network/ipfs-pinner:stable"
+  ewm-das:
+    image: "us-docker.pkg.dev/covalent-project/network/ewm-das:latest"
     volumes:
       - ~/.ipfs:/root/.ipfs/
-    container_name: ipfs-pinner
+    container_name: ewm-das
     restart: on-failure
     entrypoint: |
       /bin/bash -l -c "
@@ -54,10 +54,11 @@ services:
         xxd -r -p proof_out_hex.txt > proof_from_hex.out;
         chmod +x proof_from_hex.out;
         mv ./proof_from_hex.out /root/.ipfs/proof_from_hex.out;
-        ./ipfs-server -port 3001 -w3-agent-key $W3_AGENT_KEY -w3-delegation-file $W3_DELEGATION_FILE;"
+        ./usr/local/bin/pinner --addr :5080 --w3-agent-key $W3_AGENT_KEY --w3-delegation-proof-path $W3_DELEGATION_FILE;"
     expose:
       - "4001:4001"
       - "3001:3001"
+      - "5080:5080"
     environment:
       - W3_AGENT_KEY=${W3_AGENT_KEY}
       - W3_DELEGATION_FILE=${W3_DELEGATION_FILE}
@@ -67,6 +68,7 @@ services:
     ports:
       - "4001:4001"
       - "3001:3001"
+      - "5080:5080"
 
   evm-server:
     image: "us-docker.pkg.dev/covalent-project/network/evm-server:latest"
@@ -83,19 +85,19 @@ services:
     image: "us-docker.pkg.dev/covalent-project/network/refiner:latest"
     container_name: refiner
     links:
-      - "ipfs-pinner:ipfs-pinner"
+      - "ewm-das:ewm-das"
     # build:
     #   context: .
     #   dockerfile: Dockerfile
     restart: on-failure
     depends_on:
-      ipfs-pinner:
+      ewm-das:
         condition: service_healthy
       evm-server:
         condition: service_healthy
     entrypoint: >
       /bin/bash -l -c "
-        echo "ipfs-node-address:" $IPFS_PINNER_URL;
+        echo "ewm-das-address:" $IPFS_PINNER_URL;
         echo "hardhat-node-address:" $NODE_ETHEREUM_MAINNET;
         echo "brp-op-pk:" $BLOCK_RESULT_OPERATOR_PRIVATE_KEY;
         echo "evm-server-address:" $EVM_SERVER_URL;
@@ -107,8 +109,8 @@ services:
         done;
         echo Proof-chain contracts deployed!;
         echo Uploading test files to local .ipfs...;
-        curl -F "filedata=@/app/mix/test-data/codec-0.37/encoded/1-20063050" http://ipfs-pinner:3001/upload;
-        curl -F "filedata=@/app/mix/test-data/codec-0.37/encoded/1-20063085" http://ipfs-pinner:3001/upload;
+        curl -F "filedata=@/app/mix/test-data/codec-0.37/encoded/1-20063050" http://ewm-das:5080/upload;
+        curl -F "filedata=@/app/mix/test-data/codec-0.37/encoded/1-20063085" http://ewm-das:5080/upload;
         echo Test bsp files uploaded!;
         cd /mix;
         MIX_ENV=docker mix coveralls.json;
